@@ -1,15 +1,1 @@
-*.annot
-*.cmo
-*.cma
-*.cmi
-*.a
-*.o
-*.cmx
-*.cmxs
-*.cmxa
-
-etc/*
-man/*
-src/_build/
-src/prim.ml
-src/config.ml
+_build

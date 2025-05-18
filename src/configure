@@ -9,66 +9,9 @@
 ##    See file LICENSE-en.                                               ##
 ##                                                                       ##
 ###########################################################################
-
-function error () {
-    echo "$@" 1>&2
-    exit 1
-}
-
-function usage () {
-    echo "$@" 1>&2
-    error "Usage: $0 [ -prefix <dir> ] [ -libdir <dir> ] [ -mandir <dir> ]"
-}
-
 ###
 
-mkdir -p lib etc man
-
-###
-
-OCAMLBUILD="$(ocamlc -where)/../../bin/ocamlbuild"
 OCAMLRUN="$(ocamlc -where)/../../bin/ocamlrun"
-VERSION="$(cat VERSION)"
-PWD="$(pwd)"
-
-###
-
-LIBDIR=/usr/local/lib/obytelib
-MANDIR=/usr/local/man
-
-while [ $# -ne 0 ]; do
-    case "$1" in
-	-libdir)   LIBDIR="$2"; shift ;;
-	-mandir)   MANDIR="$2"; shift ;;
-	-prefix)
-	    LIBDIR="$2"/lib/obytelib
-	    MANDIR="$2"/man
-	    shift;;
-	*)
-	usage "Don't know what to do with \"$1\""
-    esac
-    shift
-done
-
-###
-
-echo "\
-VERSION = $VERSION
-
-OCAMLBUILD = $OCAMLBUILD -cflags -w,@a-4-70,-warn-error,A,-safe-string,-strict-formats,-strict-sequence -lflags -w,@a-4-70,-warn-error,A,-safe-string,-strict-formats,-strict-sequence -no-links -classic-display
-
-LIBDIR = $LIBDIR
-MAN3DIR = $MANDIR/man3
-" > etc/Makefile.conf
-
-###
-
-echo "\
-let version = \"$VERSION\";;
-" > etc/config.ml
-
-###
-
 MAX_PRIM_ARITY=5
 
 PRIMS=$($OCAMLRUN -p |
@@ -80,30 +23,30 @@ PRIMS=$($OCAMLRUN -p |
 
 echo "\
 include Strsec.Make(struct let section = Section.PRIM end)
-" > etc/prim.ml
+" > prim.ml
 
 for prim in $PRIMS; do
     for ((i=1; i <= MAX_PRIM_ARITY; i++)); do
-        echo -n "external ${prim}_$i : 'a" >> etc/prim.ml
+        echo -n "external ${prim}_$i : 'a" >> prim.ml
         for ((j = 1; j <= i; j ++)); do
-            echo -n " -> 'a" >> etc/prim.ml
+            echo -n " -> 'a" >> prim.ml
         done
-        echo " = \"$prim\"" >> etc/prim.ml
+        echo " = \"$prim\"" >> prim.ml
     done
-    echo >> etc/prim.ml
+    echo >> prim.ml
 done
 
 echo "\
 
 let find_prim arity name =
-  match arity, name with" >> etc/prim.ml
+  match arity, name with" >> prim.ml
 
 for prim in $PRIMS; do
     if [ "$prim" != "caml_ensure_stack_capacity" -a "$prim" != "caml_is_printable" ]; then
         for ((i=1; i <= MAX_PRIM_ARITY; i++)); do
-            echo "  | $i, \"$prim\" -> Obj.repr ${prim}_$i" >> etc/prim.ml
+            echo "  | $i, \"$prim\" -> Obj.repr ${prim}_$i" >> prim.ml
         done
-        echo >> etc/prim.ml
+        echo >> prim.ml
     fi
 done
 
@@ -135,8 +78,4 @@ let apply narg cfun arg0 stack =
     | _ ->
       f (narg - 5) (f 5 cfun arg0 stack ofs) (acc stack (ofs + 4)) stack
         (ofs + 5) in
-  f narg cfun arg0 stack 0" >> etc/prim.ml
-
-###
-
-echo "** OByteLib configuration completed successfully **"
+  f narg cfun arg0 stack 0" >> prim.ml
