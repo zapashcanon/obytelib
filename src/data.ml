@@ -9,20 +9,19 @@
 (*                                                                       *)
 (*************************************************************************)
 
-open Tools
-
 type t = Value.t array
 
 let print symb oc data =
   let buf = Buffer.create 16 in
+  let fmt = Format.formatter_of_buffer buf in
   let print_global i value =
-    Printf.bprintf buf "%4d:  %a" i Value.bprint value;
+    Fmt.pf fmt "%4d:  %a" i Value.pp value;
     begin
       let ident_opt = if i >= Array.length symb then None else symb.(i) in
       match ident_opt with
       | None -> ()
       | Some ident ->
-        let s = Printf.sprintf "  (* %s *)" (Ident.name ident) in
+        let s = Fmt.str "  (* %s *)" (Ident.name ident) in
         let sz = Buffer.length buf in
         let ofs = max 0 (78 - sz - String.length s) in
         for _i = 0 to ofs do
@@ -30,7 +29,7 @@ let print symb oc data =
         done;
         Buffer.add_string buf s
     end;
-    Printf.fprintf oc "%s\n" (Buffer.contents buf);
+    Fmt.pf oc "%s\n" (Buffer.contents buf);
     Buffer.clear buf
   in
   Array.iteri print_global data
@@ -50,7 +49,7 @@ let write oc data = output_value oc (to_objs data)
 let fix_std_exceptions globals =
   let global_nb = Array.length globals in
   if global_nb < 12 then
-    fail "invalid DATA: no place for standard exceptions" global_nb;
+    Fmt.failwith "invalid DATA: no place for standard exceptions" global_nb;
   let repl ind exn =
     let e = Obj.repr exn in
     let e =
@@ -60,7 +59,7 @@ let fix_std_exceptions globals =
         Obj.field e 0 )
     in
     if e <> globals.(ind) then
-      fail "invalid DATA: incompatible standard exception %d" ind;
+      Fmt.failwith "invalid DATA: incompatible standard exception %d" ind;
     globals.(ind) <- Obj.repr exn
   in
   Array.iteri repl

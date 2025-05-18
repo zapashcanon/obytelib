@@ -30,12 +30,12 @@ let size stack = stack.size
 (***)
 
 let acc stack n =
-  if n < 0 || n >= stack.size then invalid_arg "Astack.acc";
+  if n < 0 || n >= stack.size then Fmt.failwith "Astack.acc";
   let pos = stack.size - 1 - n in
   stack.tbl.(pos)
 
 let assign stack n v =
-  if n < 0 || n >= stack.size then invalid_arg "Astack.assign";
+  if n < 0 || n >= stack.size then Fmt.failwith "Astack.assign";
   let pos = stack.size - 1 - n in
   stack.tbl.(pos) <- v
 
@@ -52,7 +52,7 @@ let push stack x =
   stack.size <- pos + 1
 
 let popn stack n =
-  if n < 0 || n > stack.size then invalid_arg "Astack.popn";
+  if n < 0 || n > stack.size then Fmt.failwith "Astack.popn";
   if n <> 0 then (
     let new_size = stack.size - n in
     let len = Array.length stack.tbl in

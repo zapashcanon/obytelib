@@ -9,8 +9,6 @@
 (*                                                                       *)
 (*************************************************************************)
 
-open Tools
-
 type t =
   | V008
   | V010
@@ -43,7 +41,7 @@ let to_string v =
   | V030 -> "030"
   | V031 -> "031"
 
-let to_magic v = "Caml1999X" ^ to_string v
+let to_magic v = Fmt.str "Caml1999X%s" (to_string v)
 
 let magic_size =
   let len = String.length (to_magic V008) in
@@ -51,16 +49,20 @@ let magic_size =
   assert (List.for_all check_len versions);
   len
 
-let of_magic s = List.find (fun v -> to_magic v = s) versions
+let of_magic s = List.find_opt (fun v -> String.equal s (to_magic v)) versions
 
 let read ic =
-  let file_size = in_channel_length ic in
-  if file_size < magic_size then fail "too short file";
-  let () = seek_in ic (file_size - magic_size) in
+  let file_size = In_channel.length ic in
+  if Int64.compare file_size (Int64.of_int magic_size) < 0 then
+    Fmt.failwith "too short file";
+  let () = In_channel.seek ic (Int64.sub file_size (Int64.of_int magic_size)) in
   let magic_string = Bytes.create magic_size in
-  let () = really_input ic magic_string 0 magic_size in
-  let magic_string = Bytes.to_string magic_string in
-  try of_magic magic_string
-  with Not_found -> fail "unknown magic string: %S" magic_string
+  match In_channel.really_input ic magic_string 0 magic_size with
+  | None -> Fmt.failwith "Version.read"
+  | Some () -> (
+    let magic_string = Bytes.to_string magic_string in
+    match of_magic magic_string with
+    | None -> Fmt.failwith "unknown magic string: %S" magic_string
+    | Some v -> v )
 
-let write oc v = output_string oc (to_magic v)
+let write oc v = Out_channel.output_string oc (to_magic v)

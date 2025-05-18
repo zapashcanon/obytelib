@@ -20,8 +20,7 @@ type t =
   | DBUG
   | Unknown of string
 
-let of_string s =
-  match s with
+let of_string = function
   | "CODE" -> CODE
   | "DLPT" -> DLPT
   | "DLLS" -> DLLS
@@ -30,10 +29,9 @@ let of_string s =
   | "SYMB" -> SYMB
   | "CRCS" -> CRCS
   | "DBUG" -> DBUG
-  | _ -> Unknown s
+  | s -> Unknown s
 
-let to_string ty =
-  match ty with
+let to_string = function
   | CODE -> "CODE"
   | DLPT -> "DLPT"
   | DLLS -> "DLLS"
@@ -44,7 +42,6 @@ let to_string ty =
   | DBUG -> "DBUG"
   | Unknown s ->
     if String.length s <> 4 then
-      invalid_arg
-        ( "OByteLib.Section.to_string: Sections should be only 4 characters: "
-        ^ s )
+      Fmt.failwith
+        "OByteLib.Section.to_string: Sections should be only 4 characters: %s" s
     else s

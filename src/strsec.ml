@@ -40,7 +40,7 @@ struct
             Buffer.clear buf;
             f (i + 1) (name :: res) )
         else if Buffer.length buf <> 0 then
-          Tools.fail "unexpected end of %s section"
+          Fmt.failwith "unexpected end of %s section"
             (Section.to_string S.section)
         else res
       in

@@ -20,14 +20,14 @@ let read index ic =
   let start = pos_in ic in
   let stop =
     match index with
-    | [] -> Tools.fail "empty index"
+    | [] -> Fmt.failwith "empty index"
     | entry0 :: rest ->
       List.fold_left
         (fun acc entry -> min entry.Index.offset acc)
         entry0.Index.offset rest
   in
   let length = stop - start in
-  if length < 0 then Tools.fail "incompatible index";
+  if length < 0 then Fmt.failwith "incompatible index";
   let extra = Bytes.create length in
   really_input ic extra 0 length;
   Bytes.to_string extra

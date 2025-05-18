@@ -9,8 +9,6 @@
 (*                                                                       *)
 (*************************************************************************)
 
-open Tools
-
 type entry =
   { section : Section.t
   ; offset : int
@@ -20,26 +18,26 @@ type entry =
 type t = entry list
 
 let read_int ic offset =
-  seek_in ic offset;
+  In_channel.seek ic offset;
   input_binary_int ic
 
 let read_name ic offset =
   let buf = Bytes.create 4 in
-  seek_in ic offset;
+  In_channel.seek ic offset;
   really_input ic buf 0 4;
   Bytes.to_string buf
 
 let read ic =
   let file_size = in_channel_length ic in
   let magic_size = Version.magic_size in
-  let index_size = read_int ic (file_size - magic_size - 4) in
+  let index_size = read_int ic (file_size - magic_size - 4 |> Int64.of_int) in
   let rec f ind next_ofs rem =
     if ind = -1 then rem
     else
       let descr_ofs = file_size - magic_size - 4 - ((index_size - ind) lsl 3) in
-      let name = read_name ic descr_ofs in
+      let name = read_name ic (descr_ofs |> Int64.of_int) in
       let secty = Section.of_string name in
-      let length = read_int ic (descr_ofs + 4) in
+      let length = read_int ic (descr_ofs + 4 |> Int64.of_int) in
       let new_ofs = next_ofs - length in
       let entry = { section = secty; offset = new_ofs; length } in
       f (ind - 1) new_ofs (entry :: rem)
@@ -58,10 +56,9 @@ let write oc index =
   f index 0
 
 let find_section index sec =
-  try
-    let entry = List.find (fun entry -> entry.section = sec) index in
-    (entry.offset, entry.length)
-  with Not_found -> fail "section %s not found" (Section.to_string sec)
+  match List.find_opt (fun entry -> entry.section = sec) index with
+  | None -> Fmt.failwith "section %s not found" (Section.to_string sec)
+  | Some entry -> (entry.offset, entry.length)
 
 let print oc index =
   let print_descr { section; offset; length } =

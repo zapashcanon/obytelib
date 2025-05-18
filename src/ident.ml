@@ -31,7 +31,7 @@ type generic =
 (******************************************************************************)
 
 module Check = struct
-  let error () = failwith "unrecognized symbol identifier"
+  let error () = Fmt.failwith "unrecognized symbol identifier"
 
   let block obj tag size =
     if not (Obj.is_block obj) then error ();
@@ -79,15 +79,14 @@ let coerce (ident : t) : generic =
 let print oc ident =
   match coerce ident with
   | Legacy { stamp; name; flags } ->
-    Printf.fprintf oc "{ stamp = %d; name = %S; flags = %d }" stamp name flags
+    Fmt.pf oc "{ stamp = %d; name = %S; flags = %d }" stamp name flags
   | Recent (Local (name, stamp)) ->
-    Printf.fprintf oc "Local { name = %S; stmp = %d }" name stamp
+    Fmt.pf oc "Local { name = %S; stmp = %d }" name stamp
   | Recent (Scoped (name, stamp, scope)) ->
-    Printf.fprintf oc "Scoped { name = %S; stamp = %d; scope = %d }" name stamp
-      scope
-  | Recent (Global name) -> Printf.fprintf oc "Global %S" name
+    Fmt.pf oc "Scoped { name = %S; stamp = %d; scope = %d }" name stamp scope
+  | Recent (Global name) -> Fmt.pf oc "Global %S" name
   | Recent (Predef (name, stamp)) ->
-    Printf.fprintf oc "Predef { name = %S; stamp = %d }" name stamp
+    Fmt.pf oc "Predef { name = %S; stamp = %d }" name stamp
 
 (***)
 
@@ -114,7 +113,7 @@ let check version ident =
   match (expected, coerce ident) with
   | `Legacy, Legacy _ | `Recent, Recent _ -> ()
   | `Recent, Legacy _ | `Legacy, Recent _ ->
-    failwith "bytecode file version is incompatible with symbol identifiers"
+    Fmt.failwith "bytecode file version is incompatible with symbol identifiers"
 
 let check_opt version ident_opt =
   match ident_opt with None -> () | Some ident -> check version ident

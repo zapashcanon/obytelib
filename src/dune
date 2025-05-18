@@ -31,4 +31,8 @@
   tools
   tree
   value
-  version))
+  version)
+ (libraries fmt prelude)
+ ;;(flags
+ ;; (:standard -open Prelude))
+ )

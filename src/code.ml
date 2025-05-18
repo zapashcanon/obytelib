@@ -68,7 +68,9 @@ let print_gen get_ptrs get_nexts bprint_instr data symb prim oc instrs =
     let data_opt = if ind >= data_nb then None else Some data.(ind) in
     match (ident_opt, data_opt) with
     | None, (Some (Value.Int 0) | None) -> bprintf buf "#%d" ind
-    | None, Some d -> Value.bprint buf d
+    | None, Some d ->
+      let fmt = Format.formatter_of_buffer buf in
+      Value.pp fmt d
     | Some ident, _ -> bprintf buf "{%s}" (Ident.name ident)
   in
   for i = 0 to instr_nb - 1 do

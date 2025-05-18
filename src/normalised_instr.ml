@@ -92,111 +92,107 @@ type t =
 
 (***)
 
-let bprint_unop buf unop =
-  let open Printf in
+let pp_unop fmt unop =
   match unop with
-  | NOT -> bprintf buf "NOT"
-  | NEG -> bprintf buf "NEG"
-  | OFFSET n -> bprintf buf "OFFSET %d" n
-  | VECTLENGTH -> bprintf buf "VECTLENGTH"
-  | ISINT -> bprintf buf "ISINT"
+  | NOT -> Fmt.pf fmt "NOT"
+  | NEG -> Fmt.pf fmt "NEG"
+  | OFFSET n -> Fmt.pf fmt "OFFSET %d" n
+  | VECTLENGTH -> Fmt.pf fmt "VECTLENGTH"
+  | ISINT -> Fmt.pf fmt "ISINT"
 
-let bprint_binop buf binop =
-  let open Printf in
+let pp_binop fmt binop =
   match binop with
-  | ADD -> bprintf buf "ADD"
-  | SUB -> bprintf buf "SUB"
-  | MUL -> bprintf buf "MUL"
-  | DIV -> bprintf buf "DIV"
-  | MOD -> bprintf buf "MOD"
-  | AND -> bprintf buf "AND"
-  | OR -> bprintf buf "OR"
-  | XOR -> bprintf buf "XOR"
-  | LSL -> bprintf buf "LSL"
-  | LSR -> bprintf buf "LSR"
-  | ASR -> bprintf buf "ASR"
+  | ADD -> Fmt.pf fmt "ADD"
+  | SUB -> Fmt.pf fmt "SUB"
+  | MUL -> Fmt.pf fmt "MUL"
+  | DIV -> Fmt.pf fmt "DIV"
+  | MOD -> Fmt.pf fmt "MOD"
+  | AND -> Fmt.pf fmt "AND"
+  | OR -> Fmt.pf fmt "OR"
+  | XOR -> Fmt.pf fmt "XOR"
+  | LSL -> Fmt.pf fmt "LSL"
+  | LSR -> Fmt.pf fmt "LSR"
+  | ASR -> Fmt.pf fmt "ASR"
 
-let bprint_compop buf compop =
-  let open Printf in
+let pp_compop fmt compop =
   match compop with
-  | EQ -> bprintf buf "EQ"
-  | NEQ -> bprintf buf "NEQ"
-  | LT -> bprintf buf "LT"
-  | LE -> bprintf buf "LE"
-  | GT -> bprintf buf "GT"
-  | GE -> bprintf buf "GE"
-  | ULT -> bprintf buf "ULT"
-  | UGE -> bprintf buf "UGE"
+  | EQ -> Fmt.pf fmt "EQ"
+  | NEQ -> Fmt.pf fmt "NEQ"
+  | LT -> Fmt.pf fmt "LT"
+  | LE -> Fmt.pf fmt "LE"
+  | GT -> Fmt.pf fmt "GT"
+  | GE -> Fmt.pf fmt "GE"
+  | ULT -> Fmt.pf fmt "ULT"
+  | UGE -> Fmt.pf fmt "UGE"
 
-let bprint pp_ptr pp_cfun pp_data buf instr =
-  let open Printf in
+let pp pp_ptr pp_cfun pp_data fmt instr =
   let open Tools in
   match instr with
-  | ACC n -> bprintf buf "ACC %d" n
-  | PUSH -> bprintf buf "PUSH"
-  | POP n -> bprintf buf "POP %d" n
-  | ASSIGN n -> bprintf buf "ASSIGN %d" n
-  | ENVACC n -> bprintf buf "ENVACC %d" n
-  | PUSH_RETADDR ptr -> bprintf buf "PUSH_RETADDR %a" pp_ptr ptr
-  | APPLY n -> bprintf buf "APPLY %d" n
-  | APPTERM (n, s) -> bprintf buf "APPTERM %d %d" n s
-  | RETURN n -> bprintf buf "RETURN %d" n
-  | RESTART -> bprintf buf "RESTART"
-  | GRAB n -> bprintf buf "GRAB %d" n
-  | CLOSURE (n, ptr) -> bprintf buf "CLOSURE %d %a" n pp_ptr ptr
+  | ACC n -> Fmt.pf fmt "ACC %d" n
+  | PUSH -> Fmt.pf fmt "PUSH"
+  | POP n -> Fmt.pf fmt "POP %d" n
+  | ASSIGN n -> Fmt.pf fmt "ASSIGN %d" n
+  | ENVACC n -> Fmt.pf fmt "ENVACC %d" n
+  | PUSH_RETADDR ptr -> Fmt.pf fmt "PUSH_RETADDR %a" pp_ptr ptr
+  | APPLY n -> Fmt.pf fmt "APPLY %d" n
+  | APPTERM (n, s) -> Fmt.pf fmt "APPTERM %d %d" n s
+  | RETURN n -> Fmt.pf fmt "RETURN %d" n
+  | RESTART -> Fmt.pf fmt "RESTART"
+  | GRAB n -> Fmt.pf fmt "GRAB %d" n
+  | CLOSURE (n, ptr) -> Fmt.pf fmt "CLOSURE %d %a" n pp_ptr ptr
   | CLOSUREREC (n, ptrs) ->
-    bprintf buf "CLOSUREREC %d %a" n (bprint_mlarray pp_ptr) ptrs
-  | OFFSETCLOSURE n -> bprintf buf "OFFSETCLOSURE %d" n
-  | GETGLOBAL n -> bprintf buf "GETGLOBAL %a" pp_data n
-  | SETGLOBAL n -> bprintf buf "SETGLOBAL %a" pp_data n
-  | ATOM tag -> bprintf buf "ATOM %d" tag
-  | MAKEBLOCK (tag, sz) -> bprintf buf "MAKEBLOCK %d %d" tag sz
-  | MAKEFLOATBLOCK sz -> bprintf buf "MAKEFLOATBLOCK %d" sz
-  | GETFIELD ind -> bprintf buf "GETFIELD %d" ind
-  | GETFLOATFIELD ind -> bprintf buf "GETFLOATFIELD %d" ind
-  | SETFIELD ind -> bprintf buf "SETFIELD %d" ind
-  | SETFLOATFIELD ind -> bprintf buf "SETFLOATFIELD %d" ind
-  | GETVECTITEM -> bprintf buf "GETVECTITEM"
-  | SETVECTITEM -> bprintf buf "SETVECTITEM"
-  | GETBYTESCHAR -> bprintf buf "GETBYTESCHAR"
-  | SETBYTESCHAR -> bprintf buf "SETBYTESCHAR"
-  | GETSTRINGCHAR -> bprintf buf "GETSTRINGCHAR"
-  | BRANCH ptr -> bprintf buf "BRANCH %a" pp_ptr ptr
-  | BRANCHIF ptr -> bprintf buf "BRANCHIF %a" pp_ptr ptr
-  | BRANCHIFNOT ptr -> bprintf buf "BRANCHIFNOT %a" pp_ptr ptr
+    Fmt.pf fmt "CLOSUREREC %d %a" n (pp_ml_array pp_ptr) ptrs
+  | OFFSETCLOSURE n -> Fmt.pf fmt "OFFSETCLOSURE %d" n
+  | GETGLOBAL n -> Fmt.pf fmt "GETGLOBAL %a" pp_data n
+  | SETGLOBAL n -> Fmt.pf fmt "SETGLOBAL %a" pp_data n
+  | ATOM tag -> Fmt.pf fmt "ATOM %d" tag
+  | MAKEBLOCK (tag, sz) -> Fmt.pf fmt "MAKEBLOCK %d %d" tag sz
+  | MAKEFLOATBLOCK sz -> Fmt.pf fmt "MAKEFLOATBLOCK %d" sz
+  | GETFIELD ind -> Fmt.pf fmt "GETFIELD %d" ind
+  | GETFLOATFIELD ind -> Fmt.pf fmt "GETFLOATFIELD %d" ind
+  | SETFIELD ind -> Fmt.pf fmt "SETFIELD %d" ind
+  | SETFLOATFIELD ind -> Fmt.pf fmt "SETFLOATFIELD %d" ind
+  | GETVECTITEM -> Fmt.pf fmt "GETVECTITEM"
+  | SETVECTITEM -> Fmt.pf fmt "SETVECTITEM"
+  | GETBYTESCHAR -> Fmt.pf fmt "GETBYTESCHAR"
+  | SETBYTESCHAR -> Fmt.pf fmt "SETBYTESCHAR"
+  | GETSTRINGCHAR -> Fmt.pf fmt "GETSTRINGCHAR"
+  | BRANCH ptr -> Fmt.pf fmt "BRANCH %a" pp_ptr ptr
+  | BRANCHIF ptr -> Fmt.pf fmt "BRANCHIF %a" pp_ptr ptr
+  | BRANCHIFNOT ptr -> Fmt.pf fmt "BRANCHIFNOT %a" pp_ptr ptr
   | SWITCH (iptrs, pptrs) ->
-    bprintf buf "SWITCH %a %a" (bprint_mlarray pp_ptr) iptrs
-      (bprint_mlarray pp_ptr) pptrs
-  | PUSHTRAP ptr -> bprintf buf "PUSHTRAP %a" pp_ptr ptr
-  | POPTRAP -> bprintf buf "POPTRAP"
-  | RAISE -> bprintf buf "RAISE"
-  | RERAISE -> bprintf buf "RERAISE"
-  | RAISE_NOTRACE -> bprintf buf "RAISE_NOTRACE"
-  | CHECK_SIGNALS -> bprintf buf "CHECK_SIGNALS"
-  | C_CALL (narg, idx) -> bprintf buf "C_CALL %d %a" narg pp_cfun idx
-  | CONSTINT n -> bprintf buf "CONSTINT %d" n
-  | UNAPP unop -> bprintf buf "UNAPP %a" bprint_unop unop
-  | BINAPP binop -> bprintf buf "BINAPP %a" bprint_binop binop
-  | COMPARE compop -> bprintf buf "COMPARE %a" bprint_compop compop
+    Fmt.pf fmt "SWITCH %a %a" (pp_ml_array pp_ptr) iptrs (pp_ml_array pp_ptr)
+      pptrs
+  | PUSHTRAP ptr -> Fmt.pf fmt "PUSHTRAP %a" pp_ptr ptr
+  | POPTRAP -> Fmt.pf fmt "POPTRAP"
+  | RAISE -> Fmt.pf fmt "RAISE"
+  | RERAISE -> Fmt.pf fmt "RERAISE"
+  | RAISE_NOTRACE -> Fmt.pf fmt "RAISE_NOTRACE"
+  | CHECK_SIGNALS -> Fmt.pf fmt "CHECK_SIGNALS"
+  | C_CALL (narg, idx) -> Fmt.pf fmt "C_CALL %d %a" narg pp_cfun idx
+  | CONSTINT n -> Fmt.pf fmt "CONSTINT %d" n
+  | UNAPP unop -> Fmt.pf fmt "UNAPP %a" pp_unop unop
+  | BINAPP binop -> Fmt.pf fmt "BINAPP %a" pp_binop binop
+  | COMPARE compop -> Fmt.pf fmt "COMPARE %a" pp_compop compop
   | COMPBRANCH (op, n, ptr) ->
-    bprintf buf "COMPBRANCH %a %d %a" bprint_compop op n pp_ptr ptr
-  | OFFSETREF n -> bprintf buf "OFFSETREF %d" n
-  | GETMETHOD -> bprintf buf "GETMETHOD"
-  | GETPUBMET tag -> bprintf buf "GETPUBMET %d" tag
-  | GETDYNMET -> bprintf buf "GETDYNMET"
-  | STOP -> bprintf buf "STOP"
+    Fmt.pf fmt "COMPBRANCH %a %d %a" pp_compop op n pp_ptr ptr
+  | OFFSETREF n -> Fmt.pf fmt "OFFSETREF %d" n
+  | GETMETHOD -> Fmt.pf fmt "GETMETHOD"
+  | GETPUBMET tag -> Fmt.pf fmt "GETPUBMET %d" tag
+  | GETDYNMET -> Fmt.pf fmt "GETDYNMET"
+  | STOP -> Fmt.pf fmt "STOP"
 
-let string_of_unop = Tools.to_string_of_bprint bprint_unop
+let string_of_unop = Fmt.str "%a" pp_unop
 
-let string_of_binop = Tools.to_string_of_bprint bprint_binop
+let string_of_binop = Fmt.str "%a" pp_binop
 
-let string_of_compop = Tools.to_string_of_bprint bprint_compop
+let string_of_compop = Fmt.str "%a" pp_compop
 
 let to_string =
-  let pp_ptr buf ptr = Printf.bprintf buf "%d" ptr in
-  let pp_cfun buf idx = Printf.bprintf buf "%d" idx in
-  let pp_data buf ind = Printf.bprintf buf "%d" ind in
-  Tools.to_string_of_bprint (bprint pp_ptr pp_cfun pp_data)
+  let pp_ptr fmt ptr = Fmt.pf fmt "%d" ptr in
+  let pp_cfun fmt idx = Fmt.pf fmt "%d" idx in
+  let pp_data fmt ind = Fmt.pf fmt "%d" ind in
+  Fmt.str "%a" (pp pp_ptr pp_cfun pp_data)
 
 (***)
 

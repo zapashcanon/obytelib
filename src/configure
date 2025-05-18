@@ -55,7 +55,7 @@ echo "\
   | 1, \"caml_is_printable\" -> Obj.repr (fun _ -> true)
   | 1, \"caml_sys_argv\" -> Obj.repr (fun _ -> Sys.argv)
 
-  | _ -> Tools.fail \"external function %S of arity %d not found\" name arity
+  | _ -> Fmt.failwith \"external function %S of arity %d not found\" name arity
 
 let apply narg cfun arg0 stack =
   let open Astack in

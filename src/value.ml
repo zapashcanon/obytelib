@@ -24,32 +24,32 @@ type t =
 
 (***)
 
-let rec bprint buf value =
-  let open Printf in
+let rec pp fmt value =
   match value with
-  | Int n -> bprintf buf "%d" n
-  | Int32 n -> bprintf buf "%ldl" n
-  | Int64 n -> bprintf buf "%LdL" n
-  | Nativeint n -> bprintf buf "%ndn" n
-  | Float f -> bprintf buf "%F" f
-  | Float_array t -> bprint_mlarray (fun buf f -> bprintf buf "%F" f) buf t
-  | String s -> bprintf buf "%S" s
-  | Object o -> bprint_array "<" ";" ">" bprint buf o
-  | Block (tag, b) -> bprint_array (sprintf "[%d|" tag) ";" "]" bprint buf b
+  | Int n -> Fmt.pf fmt "%d" n
+  | Int32 n -> Fmt.pf fmt "%ldl" n
+  | Int64 n -> Fmt.pf fmt "%LdL" n
+  | Nativeint n -> Fmt.pf fmt "%ndn" n
+  | Float f -> Fmt.pf fmt "%F" f
+  | Float_array t -> pp_ml_array (fun fmt f -> Fmt.pf fmt "%F" f) fmt t
+  | String s -> Fmt.pf fmt "%S" s
+  | Object o ->
+    Fmt.pf fmt "<%a>" (Fmt.array ~sep:(fun fmt () -> Fmt.char fmt ';') pp) o
+  | Block (tag, b) ->
+    Fmt.pf fmt "[%d|%a]" tag
+      (Fmt.array ~sep:(fun fmt () -> Fmt.char fmt ';') pp)
+      b
 
-let to_string value =
-  let buf = Buffer.create 16 in
-  bprint buf value;
-  Buffer.contents buf
+let to_string value = Fmt.str "%a" pp value
 
 (***)
 
 let rec of_obj obj =
   let tag = Obj.tag obj in
-  if tag = Obj.lazy_tag then fail "unexpected lazy block";
-  if tag = Obj.closure_tag then fail "unexpected closure";
-  if tag = Obj.infix_tag then fail "unexpected closure";
-  if tag = Obj.abstract_tag then fail "unexpected abstract block";
+  if tag = Obj.lazy_tag then Fmt.failwith "unexpected lazy block";
+  if tag = Obj.closure_tag then Fmt.failwith "unexpected closure";
+  if tag = Obj.infix_tag then Fmt.failwith "unexpected closure";
+  if tag = Obj.abstract_tag then Fmt.failwith "unexpected abstract block";
   if tag = Obj.object_tag then
     let size = Obj.size obj in
     let tab = Array.init size (fun i -> of_obj (Obj.field obj i)) in
@@ -63,10 +63,11 @@ let rec of_obj obj =
     else if key = Obj.field (Obj.repr 0L) 0 then Int64 (Obj.obj obj : int64)
     else if key = Obj.field (Obj.repr 0n) 0 then
       Nativeint (Obj.obj obj : nativeint)
-    else fail "unknown custom block"
+    else Fmt.failwith "unknown custom block"
   else if tag = Obj.int_tag then Int (Obj.obj obj : int)
-  else if tag = Obj.out_of_heap_tag then fail "unexpected block out of heap"
-  else if tag >= Obj.no_scan_tag then fail "unexpected block"
+  else if tag = Obj.out_of_heap_tag then
+    Fmt.failwith "unexpected block out of heap"
+  else if tag >= Obj.no_scan_tag then Fmt.failwith "unexpected block"
   else (
     assert (tag < Obj.no_scan_tag);
     let size = Obj.size obj in
