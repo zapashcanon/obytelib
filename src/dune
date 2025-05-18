@@ -1,8 +1,34 @@
 (rule
-  (targets prim.ml)
-  (action
-    (run ./configure)))
+ (targets prim.ml)
+ (action
+  (run ./configure)))
 
 (library
-  (public_name obytelib)
-  (modules astack bytefile cmofile code config crcs data dbug dlls dlpt extra index instr interp normalised_code normalised_instr normalised_interp prim section strsec ident symb tools tree value version))
+ (public_name obytelib)
+ (modules
+  astack
+  bytefile
+  cmofile
+  code
+  config
+  crcs
+  data
+  dbug
+  dlls
+  dlpt
+  extra
+  index
+  instr
+  interp
+  normalised_code
+  normalised_instr
+  normalised_interp
+  prim
+  section
+  strsec
+  ident
+  symb
+  tools
+  tree
+  value
+  version))

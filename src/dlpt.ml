@@ -9,4 +9,6 @@
 (*                                                                       *)
 (*************************************************************************)
 
-include Strsec.Make(struct let section = Section.DLPT end)
+include Strsec.Make (struct
+  let section = Section.DLPT
+end)

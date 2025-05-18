@@ -11,21 +11,21 @@
 
 open Tools
 
-type t = {
-  version : Version.t;
-  vmpath  : string option;
-  vmarg   : string option;
-  index   : Index.t;
-  extra   : Extra.t;
-  data    : Data.t;
-  prim    : Prim.t;
-  code    : Code.t;
-  dlpt    : Dlpt.t;
-  dlls    : Dlls.t;
-  crcs    : Crcs.t;
-  dbug    : Dbug.t;
-  symb    : Symb.t;
-}
+type t =
+  { version : Version.t
+  ; vmpath : string option
+  ; vmarg : string option
+  ; index : Index.t
+  ; extra : Extra.t
+  ; data : Data.t
+  ; prim : Prim.t
+  ; code : Code.t
+  ; dlpt : Dlpt.t
+  ; dlls : Dlls.t
+  ; crcs : Crcs.t
+  ; dbug : Dbug.t
+  ; symb : Symb.t
+  }
 
 (***)
 
@@ -34,36 +34,48 @@ let read_vmcmd ic =
   let line = input_line ic in
   let len = String.length line in
   let error () = fail "invalid first line, virtual machine path not found" in
-  if len < 3 || line.[0] <> '#' || line.[1] <> '!' then (None, None) else
+  if len < 3 || line.[0] <> '#' || line.[1] <> '!' then (None, None)
+  else
     let ind = ref 2 in
-    while !ind < len && line.[!ind] = ' ' do incr ind done;
+    while !ind < len && line.[!ind] = ' ' do
+      incr ind
+    done;
     if !ind = len then error ();
     let path_start = !ind in
-    while !ind < len && line.[!ind] <> ' ' do incr ind done;
+    while !ind < len && line.[!ind] <> ' ' do
+      incr ind
+    done;
     let path_stop = !ind in
     let path = String.sub line path_start (path_stop - path_start) in
-    while !ind < len && line.[!ind] = ' ' do incr ind done;
+    while !ind < len && line.[!ind] = ' ' do
+      incr ind
+    done;
     let arg_start = !ind in
-    if arg_start = len then (Some path, None) else (
+    if arg_start = len then (Some path, None)
+    else (
       ind := len - 1;
-      while line.[!ind] = ' ' do decr ind done;
+      while line.[!ind] = ' ' do
+        decr ind
+      done;
       let arg_stop = !ind + 1 in
       let arg = String.sub line arg_start (arg_stop - arg_start) in
-      (Some path, Some arg)
-    )
+      (Some path, Some arg) )
 
 let write_vmcmd oc vmpath vmarg =
-  match vmpath with None -> () | Some path ->
+  match vmpath with
+  | None -> ()
+  | Some path ->
     Printf.fprintf oc "#!%s" path;
     (match vmarg with None -> () | Some arg -> Printf.fprintf oc " %s" arg);
     Printf.fprintf oc "\n"
-  
+
 let read file_name =
   let ic =
     try open_in_bin file_name
-    with _ -> fail "fail to open file %S for reading" file_name in
+    with _ -> fail "fail to open file %S for reading" file_name
+  in
   try
-    let (vmpath, vmarg) = read_vmcmd ic in
+    let vmpath, vmarg = read_vmcmd ic in
     let version = Version.read ic in
     let index = Index.read ic in
     let extra = Extra.read index ic in
@@ -76,31 +88,45 @@ let read file_name =
     let dbug = Dbug.read index ic in
     let symb = Symb.read version index ic in
     close_in ic;
-    { version; vmpath; vmarg; index; extra; data;
-      prim; code; dlpt; dlls; crcs; dbug; symb }
+    { version
+    ; vmpath
+    ; vmarg
+    ; index
+    ; extra
+    ; data
+    ; prim
+    ; code
+    ; dlpt
+    ; dlls
+    ; crcs
+    ; dbug
+    ; symb
+    }
   with
   | Failure msg ->
     close_in ic;
     fail "file %S is not a valid bytecode file (%s)" file_name msg
   | exn ->
     close_in ic;
-    fail "fail to read bytecode file %S (internal error: %s)"
-      file_name (Printexc.to_string exn)
+    fail "fail to read bytecode file %S (internal error: %s)" file_name
+      (Printexc.to_string exn)
 
 (***)
 
-let write file_name version ?vmpath ?vmarg
-    ?(extra=Extra.empty) ?(dlpt=Dlpt.empty) ?(dlls=Dlls.empty)
-    ?(crcs=Crcs.empty) ?(dbug=Dbug.empty) ?(symb=Symb.empty) data prim code =
+let write file_name version ?vmpath ?vmarg ?(extra = Extra.empty)
+  ?(dlpt = Dlpt.empty) ?(dlls = Dlls.empty) ?(crcs = Crcs.empty)
+  ?(dbug = Dbug.empty) ?(symb = Symb.empty) data prim code =
   let oflags = [ Open_wronly; Open_creat; Open_trunc; Open_binary ] in
   let oc =
     try open_out_gen oflags 0o751 file_name
-    with _ -> fail "fail to open file %S for writing" file_name in
+    with _ -> fail "fail to open file %S for writing" file_name
+  in
   let write_section section writer xxx =
     let offset = pos_out oc in
     let () = writer oc xxx in
     let length = pos_out oc - offset in
-    Index.({ section; offset; length }) in
+    Index.{ section; offset; length }
+  in
   try
     write_vmcmd oc vmpath vmarg;
     Extra.write oc extra;
@@ -115,50 +141,58 @@ let write file_name version ?vmpath ?vmarg
     let index = [ i0; i1; i2; i3; i4; i5; i6; i7 ] in
     Index.write oc index;
     Version.write oc version;
-    close_out oc;
+    close_out oc
   with
   | Failure msg ->
     close_out oc;
     fail "fail to write bytecode file %S (%s)" file_name msg
   | exn ->
     close_out oc;
-    fail "fail to write bytecode file %S (internal error: %s)" file_name (Printexc.to_string exn)
-    
+    fail "fail to write bytecode file %S (internal error: %s)" file_name
+      (Printexc.to_string exn)
 
 (***)
 
-let print oc { version; vmpath; vmarg; index; extra; data;
-               prim; code; dlpt; dlls; crcs; dbug; symb } =
-  (match vmpath with
-    | None -> Printf.fprintf oc "VM path    = \n";
-    | Some path -> Printf.fprintf oc "VM path    = %S\n" path);
-  (match vmarg with
-    | None -> Printf.fprintf oc "VM arg     = \n"
-    | Some arg -> Printf.fprintf oc "VM arg     = %S\n" arg);
+let print oc
+  { version
+  ; vmpath
+  ; vmarg
+  ; index
+  ; extra
+  ; data
+  ; prim
+  ; code
+  ; dlpt
+  ; dlls
+  ; crcs
+  ; dbug
+  ; symb
+  } =
+  ( match vmpath with
+  | None -> Printf.fprintf oc "VM path    = \n"
+  | Some path -> Printf.fprintf oc "VM path    = %S\n" path );
+  ( match vmarg with
+  | None -> Printf.fprintf oc "VM arg     = \n"
+  | Some arg -> Printf.fprintf oc "VM arg     = %S\n" arg );
   Printf.fprintf oc "Version    = %s\n" (Version.to_string version);
   Printf.fprintf oc "Extra size = %d\n" (Extra.size extra);
   Printf.fprintf oc "\n########> INDEX\n\n";
   Index.print oc index;
   if dlpt <> Dlpt.empty then (
     Printf.fprintf oc "\n########> DLPT\n\n";
-    Dlpt.print oc dlpt;
-  );
+    Dlpt.print oc dlpt );
   if dlls <> Dlls.empty then (
     Printf.fprintf oc "\n########> DLLS\n\n";
-    Dlls.print oc dlls;
-  );
+    Dlls.print oc dlls );
   if crcs <> Crcs.empty then (
     Printf.fprintf oc "\n########> CRCS\n\n";
-    Crcs.print oc crcs;
-  );
+    Crcs.print oc crcs );
   if dbug <> Dbug.empty then (
     Printf.fprintf oc "\n########> DBUG\n\n";
-    Dbug.print oc dbug;
-  );
+    Dbug.print oc dbug );
   if symb <> Symb.empty then (
     Printf.fprintf oc "\n########> SYMB\n\n";
-    Symb.print oc symb;
-  );
+    Symb.print oc symb );
   Printf.fprintf oc "\n########> DATA\n\n";
   Data.print symb oc data;
   Printf.fprintf oc "\n########> PRIM\n\n";
